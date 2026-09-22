@@ -91,13 +91,20 @@ async function getData(){
     return structuredClone(defaultData);
   }
 }
-let data=await getData();
+let data=null;
 const pad=n=>String(n).padStart(2,"0");
 function renderTasks(){const list=$("taskList");list.innerHTML="";data.tasks.forEach(t=>{const r=document.createElement("div");r.className="task"+(t.done?" done":"");const c=document.createElement("input");c.type="checkbox";c.checked=!!t.done;c.disabled=true;const s=document.createElement("span");s.textContent=t.text;r.append(c,s);list.appendChild(r)});const total=data.tasks.length,done=data.tasks.filter(t=>t.done).length;$("progressText").textContent=`${done} / ${total}`;$("taskBar").style.width=total?done/total*100+"%":"0%"}
 function renderSubjects(){for(const s of ["Physics","Chemistry","Mathematics"]){const list=$(`${s}List`);list.innerHTML="";const chapters=data.subjects[s];chapters.forEach(c=>{const r=document.createElement("div");r.className="chapter"+(c.complete?" done":"");const top=document.createElement("div");top.className="chapter-top";const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!c.complete;cb.disabled=true;const name=document.createElement("span");name.className="chapter-name";name.textContent=c.name||"Untitled chapter";top.append(cb,name);r.appendChild(top);const lec=document.createElement("div");lec.className="lectures";const lab=document.createElement("span");lab.className="lecture-label";lab.textContent="Batch lectures";const count=document.createElement("span");count.className="lecture-count";count.textContent=`${c.doneLectures||0}/${c.total||0}`;lec.append(lab,count);r.appendChild(lec);list.appendChild(r)});const total=chapters.length,complete=chapters.filter(c=>c.complete).length;$(`${s}Stat`).textContent=`${complete}/${total} chapters`;$(`${s}Bar`).style.width=total?complete/total*100+"%":"0%"}}
 function tick(){ $("eventTitle").textContent=data.title||"Focus!!!";if(!data.target){$("countdown").textContent="Set a target date";$("targetText").textContent="";return}const target=new Date(data.target),now=new Date();let d=target-now;$("targetText").textContent="Target: "+target.toLocaleString([],{dateStyle:"medium",timeStyle:"short"});if(d<=0){$("countdown").textContent="TIME'S UP";return}const days=Math.floor(d/86400000);d%=86400000;const h=Math.floor(d/3600000);d%=3600000;const m=Math.floor(d/60000);d%=60000;const s=Math.floor(d/1000);$("countdown").textContent=data.showSeconds!==false?`${days}d  ${pad(h)}h  ${pad(m)}m  ${pad(s)}s`:`${days}d  ${pad(h)}h  ${pad(m)}m`}
-function refresh(){data=getData();renderTasks();renderSubjects();tick()}
-refresh();setInterval(refresh,1000);
+async function refresh(){
+  data=await getData();
+  renderTasks();
+  renderSubjects();
+  tick();
+}
+
+refresh();
+setInterval(refresh,10000);
 </script>
 </body>
 </html>
