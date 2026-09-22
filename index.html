@@ -80,8 +80,18 @@ label{display:block;font-size:12px;opacity:.75;margin:13px 0}label input{display
 <script>
 const $=id=>document.getElementById(id);
 const defaultData={title:"Focus!!!",target:"",showSeconds:true,tasks:[],subjects:{Physics:[],Chemistry:[],Mathematics:[]}};
-function getData(){try{let d=JSON.parse(localStorage.getItem("focusDashboardV2")||"null")||structuredClone(defaultData);for(const s of ["Physics","Chemistry","Mathematics"])if(!Array.isArray(d.subjects?.[s]))d.subjects[s]=[];return d}catch(e){return structuredClone(defaultData)}}
-let data=getData();
+async function getData(){
+  try{
+    const response=await fetch("https://script.google.com/macros/s/AKfycbx1P01RHFO6-toTCwzXE1Is363VSgqgGVB1i3h4FWDTyVTW1HN8TVkiGZgPzeypISn6-w/exec");
+    const d=await response.json();
+    for(const s of ["Physics","Chemistry","Mathematics"])
+      if(!Array.isArray(d.subjects?.[s])) d.subjects[s]=[];
+    return d;
+  }catch(e){
+    return structuredClone(defaultData);
+  }
+}
+let data=await getData();
 const pad=n=>String(n).padStart(2,"0");
 function renderTasks(){const list=$("taskList");list.innerHTML="";data.tasks.forEach(t=>{const r=document.createElement("div");r.className="task"+(t.done?" done":"");const c=document.createElement("input");c.type="checkbox";c.checked=!!t.done;c.disabled=true;const s=document.createElement("span");s.textContent=t.text;r.append(c,s);list.appendChild(r)});const total=data.tasks.length,done=data.tasks.filter(t=>t.done).length;$("progressText").textContent=`${done} / ${total}`;$("taskBar").style.width=total?done/total*100+"%":"0%"}
 function renderSubjects(){for(const s of ["Physics","Chemistry","Mathematics"]){const list=$(`${s}List`);list.innerHTML="";const chapters=data.subjects[s];chapters.forEach(c=>{const r=document.createElement("div");r.className="chapter"+(c.complete?" done":"");const top=document.createElement("div");top.className="chapter-top";const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!c.complete;cb.disabled=true;const name=document.createElement("span");name.className="chapter-name";name.textContent=c.name||"Untitled chapter";top.append(cb,name);r.appendChild(top);const lec=document.createElement("div");lec.className="lectures";const lab=document.createElement("span");lab.className="lecture-label";lab.textContent="Batch lectures";const count=document.createElement("span");count.className="lecture-count";count.textContent=`${c.doneLectures||0}/${c.total||0}`;lec.append(lab,count);r.appendChild(lec);list.appendChild(r)});const total=chapters.length,complete=chapters.filter(c=>c.complete).length;$(`${s}Stat`).textContent=`${complete}/${total} chapters`;$(`${s}Bar`).style.width=total?complete/total*100+"%":"0%"}}
